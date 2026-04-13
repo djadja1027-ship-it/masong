@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 코딩 탐험대 - 6학년 언플러그드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 헤더 */
+        .header {
+            background: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 20px;
+            min-width: 70px;
+        }
+
+        .score-label {
+            font-size: 0.75em;
+        }
+
+        .score-value {
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        /* 화면 */
+        .screen {
+            display: none;
+            min-height: calc(100vh - 65px);
+            padding: 30px;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 메인 화면 */
+        .main-title {
+            font-size: 3em;
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .main-subtitle {
+            font-size: 1.5em;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+            opacity: 0.9;
+        }
+
+        .block-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .block-card {
+            background: white;
+            border-radius: 25px;
+            padding: 35px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: 4px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .block-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1), transparent);
+            transform: scale(0);
+            transition: transform 0.5s;
+        }
+
+        .block-card:hover::before {
+            transform: scale(1);
+        }
+
+        .block-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .block-card.seq { border-color: #FF6B6B; }
+        .block-card.loop { border-color: #4ECDC4; }
+        .block-card.cond { border-color: #45B7D1; }
+        .block-card.debug { border-color: #FFA07A; }
+
+        .block-card.completed {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+        }
+
+        .block-card.completed::after {
+            content: '✅';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2em;
+        }
+
+        .block-icon {
+            font-size: 5em;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .block-name {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .block-card.seq .block-name { color: #FF6B6B; }
+        .block-card.loop .block-name { color: #4ECDC4; }
+        .block-card.cond .block-name { color: #45B7D1; }
+        .block-card.debug .block-name { color: #FFA07A; }
+
+        .block-desc {
+            color: #888;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .block-level {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: inline-block;
+        }
+
+        /* 미션 선택 */
+        .mission-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .mission-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .mission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .mission-card.done {
+            background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+        }
+
+        .mission-card.done::after {
+            content: ' ✅';
+        }
+
+        .mission-icon {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .mission-name {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .mission-desc {
+            color: #888;
+            font-size: 1em;
+        }
+
+        /* 게임 화면 */
+        .game-container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .back-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(238, 90, 36, 0.3);
+        }
+
+        .game-level {
+            font-size: 1.5em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .game-box {
+            background: white;
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .game-title {
+            font-size: 2.2em;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .game-instruction {
+            font-size: 1.4em;
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* 코딩 보드 */
+        .coding-board {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .code-area {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 300px;
+        }
+
+        .code-area-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .code-slot {
+            background: white;
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.3s;
+        }
+
+        .code-slot.highlight {
+            border-color: #4CAF50;
+            background: #E8F5E9;
+        }
+
+        .code-slot.filled {
+            border-style: solid;
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .board-area {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .grid-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            aspect-ratio: 1;
+        }
+
+        .grid-cell {
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .grid-cell.start {
+            background: #C8E6C9;
+        }
+
+        .grid-cell.goal {
+            background: #FFCDD2;
+            animation: goal-pulse 1s infinite;
+        }
+
+        @keyframes goal-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .grid-cell.obstacle {
+            background: #9E9E9E;
+        }
+
+        .robot {
+            position: absolute;
+            font-size: 1.5em;
+            transition: all 0.5s ease;
+            z-index: 10;
+        }
+
+        .command-palette {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .command-palette-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .command-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .command-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .command-btn:active {
+            transform: scale(0.95);
+        }
+
+        .command-btn.loop {
+            background: linear-gradient(135deg, #4ECDC4, #44A08D);
+        }
+
+        .command-btn.cond {
+            background: linear-gradient(135deg, #45B7D1, #1E88E5);
+        }
+
+        .command-btn.repeat {
+            background: linear-gradient(135deg, #FFA07A, #FF6B6B);
+        }
+
+        /* 실행 버튼 */
+        .run-btn {
+            display: block;
+            margin: 30px auto 0;
+            background: linear-gradient(135deg, #4CAF50, #8BC34A);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.8em;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+            transition: all 0.3s;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 8px 30px rgba(76, 175, 80, 0.6); }
+        }
+
+        .run-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .run-btn:disabled {
+            background: #ccc;
+            animation: none;
+            cursor: not-allowed;
+        }
+
+        /* 디버깅 게임 */
+        .debug-code {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .debug-line {
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .debug-line:hover {
+            background: #444;
+        }
+
+        .debug-line.error {
+            background: #ff6b6b;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .debug-line.correct {
+            background: #4CAF50;
+        }
+
+        /* 순서 맞추기 */
+        .sequence-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .seq-card {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.5em;
+            cursor: grab;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .seq-card:hover {
+            transform: scale(1.05);
+        }
+
+        .seq-card.selected {
+            background: #E8F5E9;
+            border-color: #4CAF50;
+            transform: scale(1.1);
+        }
+
+        .seq-slot {
+            background: #f8f9fa;
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 반복 게임 */
+        .loop-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .loop-pattern {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pattern-item {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            color: white;
+        }
+
+        .loop-input {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .loop-input input {
+            width: 80px;
+            padding: 15px;
+            font-size: 1.5em;
+            text-align: center;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+        }
+
+        /* 조건 게임 */
+        .condition-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .condition-table th,
+        .condition-table td {
+            border: 2px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .condition-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .condition-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 진행바 */
+        .progress-bar {
+            width: 100%;
+            height: 35px;
+            background: #eee;
+            border-radius: 20px;
+            margin-top: 25px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 20px;
+            transition: width 0.5s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        /* 성공 팝업 */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .success-overlay.show {
+            display: flex;
+        }
+
+        .success-box {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        .success-emoji {
+            font-size: 10em;
+            animation: spin 1s ease;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(0); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .success-msg {
+            font-size: 3em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .success-sub {
+            font-size: 1.5em;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .success-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            border-radius: 25px;
+            font-size: 1.5em;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+
+        .success-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        .success-btn.secondary {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+        }
+
+        /* 폭죽 */
+        .firework {
+            position: fixed;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+        }
+
+        @keyframes firework-burst {
+            0% { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        /* 힌트 버튼 */
+        .hint-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(255, 152, 0, 0.4);
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .hint-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .block-grid, .mission-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .coding-board {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-board {
+                grid-template-columns: repeat(5, 1fr);
+            }
+
+            .main-title { font-size: 2em; }
+            .success-emoji { font-size: 6em; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="logo">🤖 코딩 탐험대</div>
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">⭐ 별</div>
+                <div class="score-value" id="starTotal">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">🏆 레벨</div>
+                <div class="score-value" id="levelTotal">1</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. 메인 화면 -->
+    <div class="screen active" id="mainScreen">
+        <div class="main-title">6학년 언플러그드 코딩</div>
+        <div class="main-subtitle">컴퓨터 없이 코딩을 배워요! 💻</div>
+        <div class="block-grid">
+            <div class="block-card seq" id="blockSeq" onclick="openBlock('seq')">
+                <div class="block-icon">📋</div>
+                <div class="block-name">순서대로</div>
+                <div class="block-desc">명령을 올바른<br>순서로 나열해요</div>
+                <div class="block-level">6-1 단원</div>
+            </div>
+            <div class="block-card loop" id="blockLoop" onclick="openBlock('loop')">
+                <div class="block-icon">🔄</div>
+                <div class="block-name">반복하기</div>
+                <div class="block-desc">같은 일을<br>반복해요</div>
+                <div class="block-level">6-2 단원</div>
+            </div>
+            <div class="block-card cond" id="blockCond" onclick="openBlock('cond')">
+                <div class="block-icon">❓</div>
+                <div class="block-name">조건만족</div>
+                <div class="block-desc">조건에 따라<br>달라져요</div>
+                <div class="block-level">6-3 단원</div>
+            </div>
+            <div class="block-card debug" id="blockDebug" onclick="openBlock('debug')">
+                <div class="block-icon">🔧</div>
+                <div class="block-name">오류찾기</div>
+                <div class="block-desc">잘못된 코드를<br>고쳐요</div>
+                <div class="block-level">6-4 단원</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 순서 블록 -->
+    <div class="screen" id="seqScreen">
+        <div class="main-title">📋 순서대로</div>
+        <div class="mission-grid">
+            <div class="mission-card" id="seqM1" onclick="startGame('seq','basic')">
+                <div class="mission-icon">1️⃣</div>
+                <div class="mission-name">기본 순서</div>
+                <div class="mission-desc">간단한 순서 만들기</div>
+            </div>
+            <div class="mission-card" id="seqM2" onclick="startGame('seq','robot')">
+                <div class="mission-icon">🤖</div>
+                <div class="mission-name">로봇 길찾기</div>
+                <div class="mission-desc">로봇을 목적지로!</div>
+            </div>
+            <div class="mission-card" id="seqM3" onclick="startGame('seq','recipe')">
+                <div class="mission-icon">🍳</div>
+                <div class="mission-name">요리 순서</div>
+                <div class="mission-desc">요리 순서 맞추기</div>
+            </div>
+            <div class="mission-card" id="seqM4" onclick="startGame('seq','daily')">
+                <div class="mission-icon">📅</div>
+                <div class="mission-name">하루 일과</div>
+                <div class="mission-desc">아침부터 밤까지</div>
+            </div>
+        </div>
+        <button class="back-btn" style="margin-top: 30px;" onclick="goMain()">← 처음으로</button>
+    </div>
+
+    <!-- 3. 반복 블록 -->
+    <div class="screen" id="loopScreen">
+        <div class="main-title">🔄 반복하기</div>
+        <div class="mission-grid">
+            <div class="mission-card" id="loopM1" onclick="startGame('loop','pattern')">
+                <div class="mission-icon">🔢</div>
+                <div class="mission-name">패턴 찾기</div>
+                <div class="mission-desc">반복되는 패턴</div>
+            </div>
+            <div class="mission-card" id="loopM2" onclick="startGame('loop','count')">
+                <div class="mission-icon">🔢</div>
+                <div class="mission-name">몇 번일까?</div>
+                <div class="mission-desc">반복 횟수 세기</div>
+            </div>
+            <div class="mission-card" id="loopM3" onclick="startGame('loop','efficient')">
+                <div class="mission-icon">⚡</div>
+                <div class="mission-name">간단하게!</div>
+                <div class="mission-desc">반복으로 간단하게</div>
+            </div>
+            <div class="mission-card" id="loopM4" onclick="startGame('loop','nested')">
+                <div class="mission-icon">📦</div>
+                <div class="mission-name">중복 반복</div>
+                <div class="mission-desc">반복 안에 반복</div>
+            </div>
+        </div>
+        <button class="back-btn" style="margin-top: 30px;" onclick="goMain()">← 처음으로</button>
+    </div>
+
+    <!-- 4. 조건 블록 -->
+    <div class="screen" id="condScreen">
+        <div class="main-title">❓ 조건만족</div>
+        <div class="mission-grid">
+            <div class="mission-card" id="condM1" onclick="startGame('cond','ifelse')">
+                <div class="mission-icon">🚦</div>
+                <div class="mission-name">만약 ~라면</div>
+                <div class="mission-desc">조건 분기 이해</div>
+            </div>
+            <div class="mission-card" id="condM2" onclick="startGame('cond','table')">
+                <div class="mission-icon">📊</div>
+                <div class="mission-name">진리표</div>
+                <div class="mission-desc">참/거짓 표</div>
+            </div>
+            <div class="mission-card" id="condM3" onclick="startGame('cond','sensor')">
+                <div class="mission-icon">📡</div>
+                <div class="mission-name">센서 반응</div>
+                <div class="mission-desc">센서 조건 만들기</div>
+            </div>
+            <div class="mission-card" id="condM4" onclick="startGame('cond','game')">
+                <div class="mission-icon">🎮</div>
+                <div class="mission-name">게임 규칙</div>
+                <div class="mission-desc">게임 조건 만들기</div>
+            </div>
+        </div>
+        <button class="back-btn" style="margin-top: 30px;" onclick="goMain()">← 처음으로</button>
+    </div>
+
+    <!-- 5. 디버깅 블록 -->
+    <div class="screen" id="debugScreen">
+        <div class="main-title">🔧 오류찾기</div>
+        <div class="mission-grid">
+            <div class="mission-card" id="debugM1" onclick="startGame('debug','find')">
+                <div class="mission-icon">🔍</div>
+                <div class="mission-name">오류 찾기</div>
+                <div class="mission-desc">잘못된 줄 찾기</div>
+            </div>
+            <div class="mission-card" id="debugM2" onclick="startGame('debug','fix')">
+                <div class="mission-icon">✏️</div>
+                <div class="mission-name">수정하기</div>
+                <div class="mission-desc">올바르게 고치기</div>
+            </div>
+            <div class="mission-card" id="debugM3" onclick="startGame('debug','logic')">
+                <div class="mission-icon">🧠</div>
+                <div class="mission-name">논리 오류</div>
+                <div class="mission-desc">논리적 오류 찾기</div>
+            </div>
+            <div class="mission-card" id="debugM4" onclick="startGame('debug','complete')">
+                <div class="mission-icon">✅</div>
+                <div class="mission-name">완성하기</div>
+                <div class="mission-desc">빠진 코드 채우기</div>
+            </div>
+        </div>
+        <button class="back-btn" style="margin-top: 30px;" onclick="goMain()">← 처음으로</button>
+    </div>
+
+    <!-- 6. 게임 화면 -->
+    <div class="screen" id="gameScreen">
+        <div class="game-container">
+            <div class="back-bar">
+                <button class="back-btn" onclick="goBlock()">← 놀이 고르기</button>
+                <div class="game-level" id="gameLevel">문제 1/5</div>
+            </div>
+            <div class="game-box">
+                <div class="game-title" id="gameTitle">코딩 게임</div>
+                <div class="game-instruction" id="gameInstruction">설명</div>
+                <div id="gameContent"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width:0%">0/5</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 힌트 버튼 -->
+    <button class="hint-btn" onclick="showHint()">💡</button>
+
+    <!-- 성공 팝업 -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-box">
+            <div class="success-emoji">🎉</div>
+            <div class="success-msg">완벽해요!</div>
+            <div class="success-sub" id="successSub">별 20 개 받았어요!</div>
+            <button class="success-btn" onclick="closeSuccess()">다음 문제 →</button>
+            <button class="success-btn secondary" onclick="goBlock()">놀이 고르기</button>
+        </div>
+    </div>
+
+    <script>
+        // 상태
+        let currentBlock = '';
+        let currentGame = '';
+        let questionIndex = 0;
+        let totalQuestions = 5;
+        let starTotal = 0;
+        let levelTotal = 1;
+        let completedGames = {};
+        let currentCode = [];
+        let robotPos = {x: 0, y: 0};
+
+        // 게임 데이터
+        const gameData = {
+            seq: {
+                basic: {
+                    title: '📋 기본 순서',
+                    instruction: '올바른 순서로 나열해요',
+                    questions: [
+                        { task: '학교 가기', steps: ['일어나기', '세수하기', '아침먹기', '학교가기'], correct: [0,1,2,3] },
+                        { task: '손씻기', steps: ['물적시기', '비누칠하기', '헹구기', '닦기'], correct: [0,1,2,3] },
+                        { task: '양치하기', steps: ['치약짜기', '양치하기', '헹구기', '칫솔씻기'], correct: [0,1,2,3] },
+                        { task: '책가방싸기', steps: ['책넣기', '필통넣기', '지퍼닫기', '메기'], correct: [0,1,2,3] },
+                        { task: '컴퓨터켜기', steps: ['전원누르기', '로그인하기', '프로그램실행', '작업하기'], correct: [0,1,2,3] }
+                    ]
+                },
+                robot: {
+                    title: '🤖 로봇 길찾기',
+                    instruction: '로봇을 🏁까지 이동시켜요',
+                    questions: [
+                        { start: [0,0], goal: [2,2], obstacles: [[1,1]], solution: ['→','→','↓','↓'] },
+                        { start: [0,0], goal: [3,1], obstacles: [[1,0],[1,1]], solution: ['↓','→','→','→'] },
+                        { start: [0,2], goal: [2,0], obstacles: [[1,2],[1,1]], solution: ['←','←','↓','↓'] },
+                        { start: [1,1], goal: [4,4], obstacles: [[2,2],[3,3]], solution: ['→','→','↓','↓','→','↓'] },
+                        { start: [0,0], goal: [4,0], obstacles: [[1,0],[3,0]], solution: ['↓','→','→','→','↑','↑'] }
+                    ]
+                }
+            },
+            loop: {
+                pattern: {
+                    title: '🔢 패턴 찾기',
+                    instruction: '반복되는 패턴을 찾아요',
+                    questions: [
+                        { pattern: ['🍎','🍌','🍎','🍌','🍎'], next: '🍌', options: ['🍎','🍌','🍇','🍓'] },
+                        { pattern: ['⭐','🌟','⭐','🌟'], next: '⭐', options: ['⭐','🌟','☀️','🌙'] },
+                        { pattern: ['↑','↓','↑','↓','↑'], next: '↓', options: ['↑','↓','←','→'] },
+                        { pattern: ['🔴','🔵','🔴','🔵'], next: '🔴', options: ['🔴','🔵','🟢','🟡'] },
+                        { pattern: ['A','B','C','A','B'], next: 'C', options: ['A','B','C','D'] }
+                    ]
+                },
+                count: {
+                    title: '🔢 몇 번일까?',
+                    instruction: '반복 횟수를 입력해요',
+                    questions: [
+                        { action: '박수치기', count: 5, hint: '손뼉을 5 번 쳐요' },
+                        { action: '점프하기', count: 3, hint: '3 번 점프해요' },
+                        { action: '돌기', count: 4, hint: '4 번 돌아봐요' },
+                        { action: '악수하기', count: 2, hint: '2 번 악수해요' },
+                        { action: '인사하기', count: 10, hint: '10 번 인사해요' }
+                    ]
+                }
+            },
+            cond: {
+                ifelse: {
+                    title: '🚦 만약 ~ 라면',
+                    instruction: '조건에 따라 알맞은 행동을 골라요',
+                    questions: [
+                        { condition: '비가 오면', ifAction: '우산을 써요', elseAction: '그냥 가요', correct: 'if' },
+                        { condition: '배가 고프면', ifAction: '밥을 먹어요', elseAction: '잠을 자요', correct: 'if' },
+                        { condition: '신호등이 빨강이면', ifAction: '멈춰요', elseAction: '건너가요', correct: 'if' },
+                        { condition: '시험을 잘 보면', ifAction: '칭찬받아요', elseAction: '공부 더 해요', correct: 'if' },
+                        { condition: '아프면', ifAction: '병원 가요', elseAction: '학교 가요', correct: 'if' }
+                    ]
+                },
+                table: {
+                    title: '📊 진리표',
+                    instruction: '참/거짓을 골라요',
+                    questions: [
+                        { statement: '5 는 3 보다 크다', answer: true },
+                        { statement: '사과는 과일이다', answer: true },
+                        { statement: '겨울에 덥다', answer: false },
+                        { statement: '10 은 2 의 배수다', answer: true },
+                        { statement: '물고기는 날 수 있다', answer: false }
+                    ]
+                }
+            },
+            debug: {
+                find: {
+                    title: '🔍 오류 찾기',
+                    instruction: '잘못된 줄을 찾아 클릭해요',
+                    questions: [
+                        { code: ['1. 일어나기', '2. 학교가기', '3. 세수하기', '4. 아침먹기'], error: 1 },
+                        { code: ['1. 물적시기', '2. 헹구기', '3. 비누칠하기', '4. 닦기'], error: 2 },
+                        { code: ['1. 전원켜기', '2. 작업하기', '3. 로그인하기', '4. 프로그램실행'], error: 2 },
+                        { code: ['1. 책넣기', '2. 지퍼닫기', '3. 필통넣기', '4. 메기'], error: 2 },
+                        { code: ['1. 양치하기', '2. 치약짜기', '3. 헹구기', '4. 칫솔씻기'], error: 1 }
+                    ]
+                },
+                fix: {
+                    title: '✏️ 수정하기',
+                    instruction: '올바른 순서로 바꿔요',
+                    questions: [
+                        { wrong: ['학교가기', '일어나기', '세수하기', '아침먹기'], correct: ['일어나기', '세수하기', '아침먹기', '학교가기'] },
+                        { wrong: ['헹구기', '비누칠하기', '물적시기', '닦기'], correct: ['물적시기', '비누칠하기', '헹구기', '닦기'] },
+                        { wrong: ['작업하기', '전원켜기', '로그인하기', '프로그램실행'], correct: ['전원켜기', '로그인하기', '프로그램실행', '작업하기'] },
+                        { wrong: ['지퍼닫기', '책넣기', '필통넣기', '메기'], correct: ['책넣기', '필통넣기', '지퍼닫기', '메기'] },
+                        { wrong: ['칫솔씻기', '양치하기', '치약짜기', '헹구기'], correct: ['치약짜기', '양치하기', '헹구기', '칫솔씻기'] }
+                    ]
+                }
+            }
+        };
+
+        // 화면 전환
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function goMain() {
+            showScreen('mainScreen');
+        }
+
+        function openBlock(block) {
+            currentBlock = block;
+            showScreen(block + 'Screen');
+        }
+
+        function goBlock() {
+            document.getElementById('successOverlay').classList.remove('show');
+            showScreen(currentBlock + 'Screen');
+        }
+
+        // 음성
+        function speak(text) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'ko-KR';
+            u.rate = 0.9;
+            u.pitch = 1.1;
+            speechSynthesis.cancel();
+            speechSynthesis.speak(u);
+        }
+
+        // 폭죽
+        function fireFireworks() {
+            const colors = ['#ff6b6b','#4ecdc4','#45b7d1','#ffa07a','#98d8c8','#f7dc6f','#667eea','#764ba2'];
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight * 0.5;
+                    for (let j = 0; j < 25; j++) {
+                        const fw = document.createElement('div');
+                        fw.className = 'firework';
+                        fw.style.left = x + 'px';
+                        fw.style.top = y + 'px';
+                        fw.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        const angle = (Math.PI * 2 * j) / 25;
+                        const v = 80 + Math.random() * 80;
+                        fw.style.setProperty('--tx', Math.cos(angle) * v + 'px');
+                        fw.style.setProperty('--ty', Math.sin(angle) * v + 'px');
+                        fw.style.animation = 'firework-burst 1s ease-out forwards';
+                        document.body.appendChild(fw);
+                        setTimeout(() => fw.remove(), 1000);
+                    }
+                }, i * 200);
+            }
+        }
+
+        // 게임 시작
+        function startGame(block, game) {
+            currentBlock = block;
+            currentGame = game;
+            questionIndex = 0;
+            showScreen('gameScreen');
+
+            const data = gameData[block]?.[game];
+            if (!data) {
+                alert('이 놀이는 준비 중이에요! 😊');
+                goBlock();
+                return;
+            }
+
+            document.getElementById('gameTitle').textContent = data.title;
+            document.getElementById('gameInstruction').textContent = data.instruction;
+            totalQuestions = data.questions.length;
+
+            loadQuestion();
+        }
+
+        // 문제 로드
+        function loadQuestion() {
+            const data = gameData[currentBlock][currentGame];
+            if (questionIndex >= totalQuestions) {
+                completeMission();
+                return;
+            }
+
+            const q = data.questions[questionIndex];
+            const content = document.getElementById('gameContent');
+            const level = document.getElementById('gameLevel');
+            level.textContent = `문제 ${questionIndex + 1}/${totalQuestions}`;
+            updateProgress();
+
+            // 게임 타입별 렌더링
+            if (currentBlock === 'seq' && currentGame === 'basic') {
+                renderSequenceGame(q, content);
+            } else if (currentBlock === 'seq' && currentGame === 'robot') {
+                renderRobotGame(q, content);
+            } else if (currentBlock === 'loop' && currentGame === 'pattern') {
+                renderPatternGame(q, content);
+            } else if (currentBlock === 'loop' && currentGame === 'count') {
+                renderCountGame(q, content);
+            } else if (currentBlock === 'cond' && currentGame === 'ifelse') {
+                renderIfElseGame(q, content);
+            } else if (currentBlock === 'cond' && currentGame === 'table') {
+                renderTableGame(q, content);
+            } else if (currentBlock === 'debug' && currentGame === 'find') {
+                renderDebugGame(q, content);
+            } else if (currentBlock === 'debug' && currentGame === 'fix') {
+                renderFixGame(q, content);
+            }
+
+            speak(data.instruction);
+        }
+
+        // 순서 게임
+        function renderSequenceGame(q, content) {
+            const shuffled = [...q.steps].sort(() => Math.random() - 0.5);
+            content.innerHTML = `
+                <div style="font-size:2em;color:#667eea;font-weight:bold;margin-bottom:20px;">${q.task}</div>
+                <div class="sequence-cards" id="seqCards">
+                    ${shuffled.map((step, i) => `
+                        <div class="seq-card" data-index="${i}" onclick="selectSeqCard(this)">${step}</div>
+                    `).join('')}
+                </div>
+                <div style="font-size:1.5em;color:#888;margin-bottom:15px;">선택한 순서:</div>
+                <div id="seqSlots" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;"></div>
+                <button class="run-btn" onclick="checkSequence('${q.correct.join(',')}')">실행하기 ▶️</button>
+            `;
+            window.selectedSeq = [];
+        }
+
+        function selectSeqCard(el) {
+            if (el.classList.contains('selected')) return;
+            el.classList.add('selected');
+            window.selectedSeq.push(el.textContent);
+            
+            const slots = document.getElementById('seqSlots');
+            const slot = document.createElement('div');
+            slot.className = 'seq-slot';
+            slot.style.background = '#E8F5E9';
+            slot.style.borderColor = '#4CAF50';
+            slot.textContent = el.textContent;
+            slots.appendChild(slot);
+            
+            speak(el.textContent);
+        }
+
+        function checkSequence(correct) {
+            const correctArr = correct.split(',').map(i => gameData.seq.basic.questions[questionIndex].steps[parseInt(i)]);
+            if (JSON.stringify(window.selectedSeq) === JSON.stringify(correctArr)) {
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('정답이에요! 완벽해요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                speak('순서가 틀렸어요. 다시 생각해 봐요!');
+                setTimeout(() => {
+                    document.getElementById('seqCards').innerHTML = '';
+                    document.getElementById('seqSlots').innerHTML = '';
+                    window.selectedSeq = [];
+                    loadQuestion();
+                }, 1500);
+            }
+        }
+
+        // 로봇 게임
+        function renderRobotGame(q, content) {
+            robotPos = {...q.start};
+            content.innerHTML = `
+                <div class="grid-board" id="robotBoard" style="grid-template-columns: repeat(5, 1fr);"></div>
+                <div class="command-palette" style="margin-top:20px;">
+                    <div class="command-palette-title">명령어</div>
+                    <button class="command-btn" onclick="addCommand('↑')">↑ 위로</button>
+                    <button class="command-btn" onclick="addCommand('↓')">↓ 아래로</button>
+                    <button class="command-btn" onclick="addCommand('←')">← 왼쪽</button>
+                    <button class="command-btn" onclick="addCommand('→')">→ 오른쪽</button>
+                </div>
+                <div id="codeList" style="margin-top:20px;font-size:1.3em;color:#667eea;"></div>
+                <button class="run-btn" onclick="runRobot('${q.goal.join(',')}')">실행하기 ▶️</button>
+            `;
+            
+            renderRobotBoard(q);
+            window.codeCommands = [];
+        }
+
+        function renderRobotBoard(q) {
+            const board = document.getElementById('robotBoard');
+            board.innerHTML = '';
+            for (let y = 0; y < 5; y++) {
+                for (let x = 0; x < 5; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    
+                    if (x === q.start[0] && y === q.start[1]) {
+                        cell.classList.add('start');
+                        cell.innerHTML = '<span class="robot" id="robot">🤖</span>';
+                    }
+                    if (x === q.goal[0] && y === q.goal[1]) {
+                        cell.classList.add('goal');
+                        cell.innerHTML = '🏁';
+                    }
+                    if (q.obstacles.some(o => o[0] === x && o[1] === y)) {
+                        cell.classList.add('obstacle');
+                        cell.innerHTML = '🧱';
+                    }
+                    
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function addCommand(cmd) {
+            window.codeCommands.push(cmd);
+            document.getElementById('codeList').textContent = '명령: ' + window.codeCommands.join(' → ');
+            speak(cmd === '↑' ? '위로' : cmd === '↓' ? '아래로' : cmd === '←' ? '왼쪽으로' : '오른쪽으로');
+        }
+
+        function runRobot(goal) {
+            const [goalX, goalY] = goal.split(',').map(Number);
+            let x = robotPos.x;
+            let y = robotPos.y;
+            let success = true;
+            
+            const robot = document.getElementById('robot');
+            
+            for (let cmd of window.codeCommands) {
+                if (cmd === '↑') y--;
+                else if (cmd === '↓') y++;
+                else if (cmd === '←') x--;
+                else if (cmd === '→') x++;
+                
+                // 장애물 체크
+                const q = gameData.seq.robot.questions[questionIndex];
+                if (q.obstacles.some(o => o[0] === x && o[1] === y)) {
+                    success = false;
+                    break;
+                }
+            }
+            
+            if (x === goalX && y === goalY && success) {
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('성공했어요! 대단해요!');
+                fireFireworks();
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 2000);
+            } else {
+                speak('다시 한번 생각해 봐요!');
+                setTimeout(() => {
+                    window.codeCommands = [];
+                    document.getElementById('codeList').textContent = '';
+                    renderRobotBoard(gameData.seq.robot.questions[questionIndex]);
+                }, 1500);
+            }
+        }
+
+        // 패턴 게임
+        function renderPatternGame(q, content) {
+            content.innerHTML = `
+                <div class="loop-pattern" style="margin-bottom:30px;">
+                    ${q.pattern.map(item => `<div class="pattern-item">${item}</div>`).join('')}
+                    <div class="pattern-item" style="background:#ddd;color:#333;">❓</div>
+                </div>
+                <div class="quiz-options" style="display:grid;grid-template-columns:repeat(2,1fr);gap:15px;">
+                    ${q.options.map(opt => `
+                        <div class="quiz-option" style="font-size:2em;padding:25px;" onclick="checkPattern(this, '${opt}', '${q.next}')">${opt}</div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function checkPattern(el, selected, correct) {
+            if (selected === correct) {
+                el.classList.add('correct');
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('정답이에요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                el.classList.add('wrong');
+                speak('다시 생각해 봐요!');
+            }
+        }
+
+        // 카운트 게임
+        function renderCountGame(q, content) {
+            content.innerHTML = `
+                <div style="font-size:3em;margin-bottom:20px;">${q.action}</div>
+                <div style="font-size:1.5em;color:#888;margin-bottom:30px;">${q.hint}</div>
+                <div class="loop-input">
+                    <span style="font-size:1.5em;">반복 횟수:</span>
+                    <input type="number" id="loopCount" min="1" max="20" value="${q.count}">
+                </div>
+                <button class="run-btn" onclick="checkCount(${q.count})">확인하기 ✓</button>
+            `;
+        }
+
+        function checkCount(correct) {
+            const input = document.getElementById('loopCount').value;
+            if (parseInt(input) === correct) {
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('맞았어요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                speak('다시 세어봐요!');
+            }
+        }
+
+        // 조건 게임
+        function renderIfElseGame(q, content) {
+            content.innerHTML = `
+                <div style="font-size:2em;color:#667eea;margin-bottom:30px;">"${q.condition}"</div>
+                <div class="quiz-options" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div class="quiz-option" onclick="checkCondition(this, 'if')">
+                        <div style="font-size:3em;">✅</div>
+                        <div>${q.ifAction}</div>
+                    </div>
+                    <div class="quiz-option" onclick="checkCondition(this, 'else')">
+                        <div style="font-size:3em;">❌</div>
+                        <div>${q.elseAction}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkCondition(el, selected) {
+            el.classList.add('correct');
+            starTotal += 20;
+            document.getElementById('starTotal').textContent = starTotal;
+            speak('맞았어요!');
+            setTimeout(() => {
+                questionIndex++;
+                loadQuestion();
+            }, 1500);
+        }
+
+        // 진리표 게임
+        function renderTableGame(q, content) {
+            content.innerHTML = `
+                <div style="font-size:1.8em;margin-bottom:30px;">"${q.statement}"</div>
+                <div class="quiz-options" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div class="quiz-option" onclick="checkTable(this, ${q.answer}, true)" style="background:#E8F5E9;">
+                        <div style="font-size:3em;">⭕</div>
+                        <div>참 (True)</div>
+                    </div>
+                    <div class="quiz-option" onclick="checkTable(this, ${q.answer}, false)" style="background:#FFEBEE;">
+                        <div style="font-size:3em;">❌</div>
+                        <div>거짓 (False)</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkTable(el, correct, selected) {
+            if (correct === selected) {
+                el.classList.add('correct');
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('정답이에요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                el.classList.add('wrong');
+                speak('다시 생각해 봐요!');
+            }
+        }
+
+        // 디버깅 게임
+        function renderDebugGame(q, content) {
+            content.innerHTML = `
+                <div class="debug-code">
+                    ${q.code.map((line, i) => `
+                        <div class="debug-line" onclick="checkDebug(this, ${i}, ${q.error})">${i+1}. ${line}</div>
+                    `).join('')}
+                </div>
+                <div style="font-size:1.3em;color:#888;text-align:center;">잘못된 줄을 클릭하세요!</div>
+            `;
+        }
+
+        function checkDebug(el, index, error) {
+            if (index === error) {
+                el.classList.add('correct');
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('잘 찾았어요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                el.classList.add('error');
+                speak('그 줄은 맞아요. 다시 찾아봐요!');
+            }
+        }
+
+        // 수정 게임
+        function renderFixGame(q, content) {
+            const shuffled = [...q.wrong].sort(() => Math.random() - 0.5);
+            content.innerHTML = `
+                <div class="sequence-cards">
+                    ${shuffled.map(step => `
+                        <div class="seq-card" onclick="selectFixCard(this)">${step}</div>
+                    `).join('')}
+                </div>
+                <div id="fixSlots" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px;"></div>
+                <button class="run-btn" onclick="checkFix('${q.correct.join(',')}')">확인하기 ✓</button>
+            `;
+            window.selectedFix = [];
+        }
+
+        function selectFixCard(el) {
+            if (el.classList.contains('selected')) return;
+            el.classList.add('selected');
+            window.selectedFix.push(el.textContent);
+            
+            const slots = document.getElementById('fixSlots');
+            const slot = document.createElement('div');
+            slot.className = 'seq-slot';
+            slot.textContent = el.textContent;
+            slots.appendChild(slot);
+        }
+
+        function checkFix(correct) {
+            const correctArr = correct.split(',');
+            if (JSON.stringify(window.selectedFix) === JSON.stringify(correctArr)) {
+                starTotal += 20;
+                document.getElementById('starTotal').textContent = starTotal;
+                speak('완벽해요!');
+                setTimeout(() => {
+                    questionIndex++;
+                    loadQuestion();
+                }, 1500);
+            } else {
+                speak('순서가 틀렸어요!');
+                setTimeout(() => {
+                    document.getElementById('fixSlots').innerHTML = '';
+                    window.selectedFix = [];
+                    loadQuestion();
+                }, 1500);
+            }
+        }
+
+        // 진행바
+        function updateProgress() {
+            const pct = (questionIndex / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressFill').textContent = `${questionIndex}/${totalQuestions}`;
+        }
+
+        // 미션 완료
+        function completeMission() {
+            const key = currentBlock + '_' + currentGame;
+            completedGames[key] = true;
+
+            document.getElementById('successSub').textContent = `별 ${totalQuestions * 20}개 받았어요!`;
+            document.getElementById('successOverlay').classList.add('show');
+            speak('모든 문제를 풀었어요! 대단해요!');
+            fireFireworks();
+            
+            levelTotal++;
+            document.getElementById('levelTotal').textContent = levelTotal;
+        }
+
+        function closeSuccess() {
+            document.getElementById('successOverlay').classList.remove('show');
+            goBlock();
+        }
+
+        // 힌트
+        function showHint() {
+            const hints = {
+                seq: '명령은 차례대로 실행돼요!',
+                loop: '같은 일이 반복되면 반복문을 사용해요!',
+                cond: '조건이 참일 때와 거짓일 때를 생각해요!',
+                debug: '코드를 차근차근 따라가며 확인해요!'
+            };
+            speak(hints[currentBlock] || '힌트입니다!');
+            alert(hints[currentBlock] || '힌트입니다!');
+        }
+
+        // 음성 로드
+        if (typeof speechSynthesis !== 'undefined') {
+            speechSynthesis.onvoiceschanged = () => {};
+        }
+    </script>
+</body>
+</html>
+```
